@@ -38,6 +38,7 @@ export const useChat = (options: UseChatOptions = {}) => {
 
         if (walletResponse.data) {
           upsertWallet(walletResponse.data)
+          //tesst
         }
       } catch (error) {
         console.error("Error refreshing data after chat:", error)

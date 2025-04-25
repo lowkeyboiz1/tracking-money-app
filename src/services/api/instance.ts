@@ -26,7 +26,7 @@ export const authHeader_Bearer = () => {
 
 export const instance = axios.create({
   // Use a hardcoded URL if environment variable is not available
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  // baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
   headers: {
     Accept: "application/json",
   },
