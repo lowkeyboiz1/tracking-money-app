@@ -3,21 +3,25 @@ import { getCollection } from "@/lib/mongodb"
 import { COLLECTIONS, Wallet } from "@/lib/schema"
 import { ObjectId } from "mongodb"
 
-// GET /api/wallets/[id] - Get a specific wallet
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const walletId = params.id
+// Define the params type
+type Params = Promise<{ id: string }>
 
-    if (!walletId) {
+// GET /api/wallets/[id] - Get a specific wallet
+export async function GET(request: NextRequest, context: { params: Params }) {
+  try {
+    const params = await context.params
+    const id = params.id
+
+    if (!id) {
       return NextResponse.json({ error: "Wallet ID is required" }, { status: 400 })
     }
 
-    if (!ObjectId.isValid(walletId)) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid wallet ID" }, { status: 400 })
     }
 
     const walletCollection = await getCollection(COLLECTIONS.WALLETS)
-    const wallet = await walletCollection.findOne({ _id: new ObjectId(walletId) })
+    const wallet = await walletCollection.findOne({ _id: new ObjectId(id) })
 
     if (!wallet) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 })
@@ -31,9 +35,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PATCH /api/wallets/[id] - Update a wallet
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: Params }) {
   try {
-    const id = await params.id
+    const params = await context.params
+    const id = params.id
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid wallet ID" }, { status: 400 })
@@ -58,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const collection = await getCollection(COLLECTIONS.WALLETS)
     const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateData })
 
-    if (result.matchedCount === 0) {
+    if (result.modifiedCount === 0) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 })
     }
 
@@ -73,8 +78,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // DELETE /api/wallets/[id] - Delete a wallet
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Params }) {
   try {
+    const params = await context.params
     const id = params.id
 
     if (!ObjectId.isValid(id)) {
@@ -99,8 +105,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Params }) {
   try {
+    const params = await context.params
     const id = params.id
     const body = await req.json()
     const { name, balance, currency } = body
@@ -112,7 +119,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const collection = await getCollection(COLLECTIONS.WALLETS)
     const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: { name, balance, currency } })
 
-    if (result?.matchedCount === 0) {
+    if (result.modifiedCount === 0) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 })
     }
 
