@@ -251,6 +251,7 @@ IMPORTANT INSTRUCTIONS:
 3. DO NOT do any mathematical operations or calculations.
 4. DO NOT try to add/subtract transaction amounts to/from the balance.
 5. DO NOT show any calculations like "X + Y - Z = W".
+6. ALWAYS include the current wallet balance in your response with emphasis.
 
 Your response should follow this EXACT template:
 "Tôi đã xử lý các giao dịch của bạn. ${transactionSummary}
@@ -290,6 +291,9 @@ IMPORTANT INSTRUCTIONS:
 2. DO NOT do any mathematical operations or calculations.
 3. If the user asks about their balance, your answer should be EXACTLY:
    "Số dư hiện tại của bạn là ${wallet.balance} ${walletCurrency}."
+4. ALWAYS include the current wallet balance in your response using this exact format:
+   "Số dư hiện tại của bạn là ${wallet.balance} ${walletCurrency}."
+5. Place the balance information at the end of your response.
 
 You can process and respond to other Vietnamese or English commands normally.`,
     }

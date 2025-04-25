@@ -19,34 +19,6 @@ export const useChat = (options: UseChatOptions = {}) => {
 
   const { walletId } = options
 
-  // Function to refresh transactions and wallet data
-  const refreshTransactionsAndWallet = useCallback(
-    async (walletId: string) => {
-      try {
-        // Invalidate React Query cache
-        queryClient.invalidateQueries({ queryKey: ["transactions", walletId] })
-        queryClient.invalidateQueries({ queryKey: ["wallet", walletId] })
-        queryClient.invalidateQueries({ queryKey: ["wallets"] })
-
-        // Fetch latest data for Jotai
-        const [transactionsResponse, walletResponse] = await Promise.all([axios.get(`/api/transactions?walletId=${walletId}`), axios.get(`/api/wallets/${walletId}`)])
-
-        // Update Jotai state
-        if (transactionsResponse.data) {
-          updateTransactions(transactionsResponse.data)
-        }
-
-        if (walletResponse.data) {
-          upsertWallet(walletResponse.data)
-          //tesst
-        }
-      } catch (error) {
-        console.error("Error refreshing data after chat:", error)
-      }
-    },
-    [queryClient, updateTransactions, upsertWallet]
-  )
-
   const {
     messages,
     input,
@@ -81,6 +53,30 @@ export const useChat = (options: UseChatOptions = {}) => {
     },
   })
 
+  // Function to refresh transactions and wallet data
+  const refreshTransactionsAndWallet = async (walletId: string) => {
+    try {
+      // Invalidate React Query cache
+      queryClient.invalidateQueries({ queryKey: ["transactions", walletId] })
+      queryClient.invalidateQueries({ queryKey: ["wallet", walletId] })
+      queryClient.invalidateQueries({ queryKey: ["wallets"] })
+
+      // Fetch latest data for Jotai
+      const [transactionsResponse, walletResponse] = await Promise.all([axios.get(`/api/transactions?walletId=${walletId}`), axios.get(`/api/wallets/${walletId}`)])
+
+      // Update Jotai state
+      if (transactionsResponse.data) {
+        updateTransactions(transactionsResponse.data)
+      }
+
+      if (walletResponse.data) {
+        upsertWallet(walletResponse.data)
+      }
+    } catch (error) {
+      console.error("Error refreshing data after chat:", error)
+    }
+  }
+
   // Load chat history when wallet changes
   useEffect(() => {
     if (!walletId) return
@@ -104,7 +100,7 @@ export const useChat = (options: UseChatOptions = {}) => {
     if (walletId) {
       refreshTransactionsAndWallet(walletId)
     }
-  }, [walletId, setMessages, refreshTransactionsAndWallet])
+  }, [walletId, setMessages])
 
   // Function to clear chat history
   const clearChatHistory = useCallback(async () => {
@@ -132,6 +128,11 @@ export const useChat = (options: UseChatOptions = {}) => {
 
       setIsSubmitting(true)
 
+      // Always refresh the wallet data before submitting to get latest balance
+      if (walletId) {
+        refreshTransactionsAndWallet(walletId)
+      }
+
       // Submit to the Vercel AI SDK - wrap in Promise.resolve for catch
       Promise.resolve(vercelHandleSubmit(e))
         .catch((error: Error) => {
@@ -142,7 +143,7 @@ export const useChat = (options: UseChatOptions = {}) => {
           setIsSubmitting(false)
         })
     },
-    [input, vercelHandleSubmit, isSubmitting]
+    [input, vercelHandleSubmit, isSubmitting, walletId, refreshTransactionsAndWallet]
   )
 
   return {
